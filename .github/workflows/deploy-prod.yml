@@ -42,6 +42,10 @@ jobs:
         run: |
           aws s3 sync dist/ "s3://$BUCKET_NAME/prod/$APP_NAME/" --delete
 
+      - name: Publish artifact
+        run: |
+          aws s3 sync dist/ "s3://$BUCKET_NAME/artifacts/$APP_NAME/${{ github.event.release.tag_name }}/" --delete
+
       - name: Invalidate CloudFront
         run: |
           aws cloudfront create-invalidation \
