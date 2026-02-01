@@ -3,6 +3,15 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "test": "npm run test:unit && npm run test:build",
+    "test:unit": "node --test tests/unit/*.test.mjs",
+    "test:build": "node --test tests/build.test.mjs",
+    "test:e2e": "npx playwright test",
+    "test:e2e:headed": "npx playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@aws-infra-example/e2e-lib": "0.0.0-*"
   }
 }

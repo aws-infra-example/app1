@@ -13,6 +13,10 @@ jobs:
       id-token: write
       contents: read
       pull-requests: write
+      packages: read
+    outputs:
+      sandbox_url: ${{ steps.sandbox-url.outputs.url }}
+      sandbox_env: ${{ steps.sandbox-url.outputs.env }}
     env:
       AWS_REGION: us-east-1
       BUCKET_NAME: apps-ecosystem-artifacts-311141564186
@@ -23,6 +27,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run unit tests
+        run: npm test
 
       - name: Build
         run: npm run build
@@ -54,6 +67,14 @@ jobs:
             --field sandbox_id="pr-${{ github.event.pull_request.number }}" \
             --field app1_version="pr-${{ github.event.pull_request.number }}"
 
+      - name: Set sandbox URL
+        id: sandbox-url
+        run: |
+          DOMAIN="${{ vars.CLOUDFRONT_DOMAIN }}"
+          ENV="sandbox-pr-${{ github.event.pull_request.number }}"
+          echo "url=https://${DOMAIN}/${ENV}" >> $GITHUB_OUTPUT
+          echo "env=${ENV}" >> $GITHUB_OUTPUT
+
       - name: Comment on PR
         uses: actions/github-script@v7
         with:
@@ -67,3 +88,47 @@ jobs:
             });
         env:
           CLOUDFRONT_DOMAIN: ${{ vars.CLOUDFRONT_DOMAIN }}
+
+  e2e-tests:
+    needs: create-sandbox
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    env:
+      E2E_BASE_URL: ${{ needs.create-sandbox.outputs.sandbox_url }}
+      E2E_ENV: ${{ needs.create-sandbox.outputs.sandbox_env }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Wait for sandbox deployment
+        run: |
+          echo "Waiting for sandbox to be ready..."
+          sleep 60
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
