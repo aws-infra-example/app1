@@ -5,12 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>App 1</title>
   <script>
-    // Set base tag for proper relative path resolution
+    // Compute base path for relative resource resolution
     // Handles both path-based (/prod/app1) and subdomain-based (prod.example.com/app1) routing
-    (function() {
+    var __basePath = (function() {
       var path = window.location.pathname;
-      var base = path.endsWith('/') ? path : path + '/';
-      document.write('<base href="' + base + '">');
+      return path.endsWith('/') ? path : path + '/';
     })();
   </script>
   <style>
@@ -50,6 +49,11 @@
       <dd id="time">__BUILD_TIME__</dd>
     </dl>
   </main>
-  <script src="main.js"></script>
+  <script>
+    // Load main.js using computed base path
+    var s = document.createElement('script');
+    s.src = __basePath + 'main.js';
+    document.body.appendChild(s);
+  </script>
 </body>
 </html>
