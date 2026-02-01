@@ -1,0 +1,52 @@
+name: Deploy to Dev
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  BUCKET_NAME: apps-ecosystem-artifacts-311141564186
+  DISTRIBUTION_ID: E2B3438FTL3K7P
+  APP_NAME: app1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build
+        run: npm run build
+        env:
+          APP_REF: ${{ github.sha }}
+          APP_SHA: ${{ github.sha }}
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to dev
+        run: |
+          aws s3 sync dist/ "s3://$BUCKET_NAME/dev/$APP_NAME/" --delete
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id $DISTRIBUTION_ID \
+            --paths "/dev/$APP_NAME/*"
+
+      - name: Summary
+        run: |
+          echo "## Deployed $APP_NAME to dev" >> $GITHUB_STEP_SUMMARY
+          echo "- SHA: ${GITHUB_SHA:0:8}" >> $GITHUB_STEP_SUMMARY
+          echo "- URL: https://d3qmcix5z43lko.cloudfront.net/dev/$APP_NAME" >> $GITHUB_STEP_SUMMARY
