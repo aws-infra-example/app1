@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App 1</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f5; min-height: 100vh; }
+    nav { background: #333; padding: 1rem; }
+    nav a { color: #fff; text-decoration: none; margin-right: 1.5rem; }
+    nav a:hover { text-decoration: underline; }
+    nav a.active { font-weight: bold; border-bottom: 2px solid #fff; }
+    main { padding: 2rem; max-width: 800px; margin: 0 auto; }
+    h1 { margin-bottom: 1rem; color: #333; }
+    .info { background: #fff; padding: 1rem; border-radius: 4px; margin-top: 1rem; }
+    .info dt { font-weight: bold; margin-top: 0.5rem; }
+    .info dd { color: #666; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/app1" class="active">App 1</a>
+    <a href="/app2">App 2</a>
+  </nav>
+  <main>
+    <h1>App 1</h1>
+    <p>This is the first application in the ecosystem.</p>
+    <dl class="info">
+      <dt>Build Ref</dt>
+      <dd id="ref">__APP_REF__</dd>
+      <dt>Build SHA</dt>
+      <dd id="sha">__APP_SHA__</dd>
+      <dt>Build Time</dt>
+      <dd id="time">__BUILD_TIME__</dd>
+    </dl>
+  </main>
+  <script src="main.js"></script>
+</body>
+</html>

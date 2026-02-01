@@ -1,0 +1,69 @@
+name: Publish Artifacts
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref_name:
+        description: 'Custom ref name for artifact'
+        required: false
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  BUCKET_NAME: apps-ecosystem-artifacts-311141564186
+  APP_NAME: app1
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build
+        run: |
+          npm run build
+        env:
+          APP_REF: ${{ github.sha }}
+          APP_SHA: ${{ github.sha }}
+
+      - name: Add build info
+        run: |
+          echo "{ \"ref\": \"$GITHUB_SHA\", \"built\": \"$(date -Iseconds)\" }" > dist/build-info.json
+
+      - name: Determine ref name
+        id: ref
+        run: |
+          if [ -n "${{ inputs.ref_name }}" ]; then
+            echo "name=${{ inputs.ref_name }}" >> $GITHUB_OUTPUT
+          elif [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            echo "name=$GITHUB_REF_NAME" >> $GITHUB_OUTPUT
+          else
+            echo "name=main" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::311141564186:role/github-actions-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Upload artifacts
+        run: |
+          REF="${{ steps.ref.outputs.name }}"
+          aws s3 sync dist/ "s3://$BUCKET_NAME/artifacts/$APP_NAME/$REF/" --delete
+          aws s3 sync dist/ "s3://$BUCKET_NAME/artifacts/$APP_NAME/${GITHUB_SHA:0:8}/" --delete
+
+      - name: Summary
+        run: |
+          echo "## Published $APP_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "Ref: ${{ steps.ref.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "SHA: ${GITHUB_SHA:0:8}" >> $GITHUB_STEP_SUMMARY
