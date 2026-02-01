@@ -1,0 +1,6 @@
+{
+  "apiUrl": "https://api-staging.example.com",
+  "features": {
+    "debugMode": true
+  }
+}

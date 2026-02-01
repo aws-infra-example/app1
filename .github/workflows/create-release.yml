@@ -1,0 +1,34 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.2.3)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Create release branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "release/v${{ inputs.version }}"
+          git push origin "release/v${{ inputs.version }}"
+
+      - name: Summary
+        run: |
+          echo "## Release Branch Created" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: release/v${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- This will trigger a staging deployment" >> $GITHUB_STEP_SUMMARY
+          echo "- To deploy to prod, create a GitHub Release from this branch" >> $GITHUB_STEP_SUMMARY

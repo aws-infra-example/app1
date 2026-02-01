@@ -1,6 +1,11 @@
 console.log('App 1 loaded');
 console.log('Ref:', '__APP_REF__');
 console.log('SHA:', '__APP_SHA__');
+console.log('Env:', '__APP_ENV__');
+
+// Parse embedded config
+const appConfig = __APP_CONFIG__;
+console.log('Config:', appConfig);
 
 // Detect routing mode and parse environment
 const host = window.location.hostname;
@@ -16,11 +21,11 @@ let routingMode = 'subdomain';
 const pathParts = path.split('/').filter(p => p);
 const firstSegment = pathParts[0] || '';
 
-if (firstSegment === 'prod' || firstSegment === 'dev' || firstSegment.startsWith('sandbox-')) {
+if (firstSegment === 'prod' || firstSegment === 'dev' || firstSegment === 'staging' || firstSegment.startsWith('sandbox-')) {
   // Path-based routing detected
   routingMode = 'path';
   env = firstSegment;
-} else if (subdomain === 'prod' || subdomain === 'dev') {
+} else if (subdomain === 'prod' || subdomain === 'dev' || subdomain === 'staging') {
   env = subdomain;
 } else if (subdomain.startsWith('sandbox-')) {
   env = subdomain;
@@ -39,3 +44,78 @@ if (routingMode === 'path' && env !== 'unknown') {
 document.getElementById('env').textContent = env;
 document.getElementById('host').textContent = host;
 document.getElementById('route').textContent = path;
+
+// Display config
+const configPre = document.querySelector('#config pre');
+if (configPre) {
+  configPre.textContent = JSON.stringify(appConfig, null, 2);
+}
+
+// Fetch and display ecosystem manifest
+async function loadEcosystemManifest() {
+  const manifestSection = document.getElementById('ecosystem-section');
+  if (!manifestSection) return;
+
+  // Determine manifest URL based on routing mode
+  let manifestUrl;
+  if (routingMode === 'path' && env !== 'unknown') {
+    manifestUrl = '/' + env + '/manifest.json';
+  } else if (routingMode === 'subdomain' && env !== 'unknown') {
+    manifestUrl = '/manifest.json';
+  } else {
+    manifestSection.innerHTML = '<p><em>Manifest not available (unknown environment)</em></p>';
+    return;
+  }
+
+  try {
+    const response = await fetch(manifestUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const manifest = await response.json();
+    displayManifest(manifest);
+  } catch (err) {
+    console.warn('Failed to load ecosystem manifest:', err);
+    manifestSection.innerHTML = '<p><em>Manifest not available</em></p>';
+  }
+}
+
+function displayManifest(manifest) {
+  const section = document.getElementById('ecosystem-section');
+  if (!section) return;
+
+  const isSandbox = manifest.lifecycle === 'ephemeral';
+  const deployedAt = new Date(manifest.deployedAt).toLocaleString();
+
+  // Build apps list
+  const appsList = Object.entries(manifest.apps || {})
+    .map(([name, info]) => {
+      const isCurrent = name === 'app1';
+      const link = routingMode === 'path'
+        ? `/${manifest.environment}/${name}`
+        : `/${name}`;
+      return `<li><a href="${link}">${name}</a>: ${info.ref}${isCurrent ? ' (current)' : ''}</li>`;
+    })
+    .join('');
+
+  section.innerHTML = `
+    ${isSandbox ? '<div class="sandbox-banner">This is a temporary sandbox environment</div>' : ''}
+    <dl class="info">
+      <dt>Lifecycle</dt>
+      <dd>${manifest.lifecycle}</dd>
+      <dt>Deployed At</dt>
+      <dd>${deployedAt}</dd>
+      <dt>Config</dt>
+      <dd><a href="${manifest.configUrl}" target="_blank">View source</a></dd>
+      <dt>Apps</dt>
+      <dd><ul style="margin:0;padding-left:1.5em;">${appsList}</ul></dd>
+    </dl>
+  `;
+}
+
+// Load manifest after DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', loadEcosystemManifest);
+} else {
+  loadEcosystemManifest();
+}

@@ -1,8 +1,9 @@
-name: Deploy to Dev
+name: Deploy to Staging
 
 on:
   push:
-    branches: [main]
+    branches:
+      - 'release/*'
 
 permissions:
   id-token: write
@@ -27,27 +28,28 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          APP_REF: ${{ github.sha }}
+          APP_REF: ${{ github.ref_name }}
           APP_SHA: ${{ github.sha }}
-          APP_ENV: dev
+          APP_ENV: staging
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Deploy to dev
+      - name: Deploy to staging
         run: |
-          aws s3 sync dist/ "s3://$BUCKET_NAME/dev/$APP_NAME/" --delete
+          aws s3 sync dist/ "s3://$BUCKET_NAME/staging/$APP_NAME/" --delete
 
       - name: Invalidate CloudFront
         run: |
           aws cloudfront create-invalidation \
             --distribution-id $DISTRIBUTION_ID \
-            --paths "/dev/$APP_NAME/*"
+            --paths "/staging/$APP_NAME/*"
 
       - name: Summary
         run: |
-          echo "## Deployed $APP_NAME to dev" >> $GITHUB_STEP_SUMMARY
+          echo "## Deployed $APP_NAME to staging" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- SHA: ${GITHUB_SHA:0:8}" >> $GITHUB_STEP_SUMMARY
-          echo "- URL: https://d3qmcix5z43lko.cloudfront.net/dev/$APP_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "- URL: https://d3qmcix5z43lko.cloudfront.net/staging/$APP_NAME" >> $GITHUB_STEP_SUMMARY

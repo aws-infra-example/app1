@@ -1,0 +1,6 @@
+{
+  "apiUrl": "https://api.example.com",
+  "features": {
+    "debugMode": false
+  }
+}

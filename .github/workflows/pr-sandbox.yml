@@ -29,6 +29,7 @@ jobs:
         env:
           APP_REF: pr-${{ github.event.pull_request.number }}
           APP_SHA: ${{ github.event.pull_request.head.sha }}
+          APP_ENV: sandbox-pr-${{ github.event.pull_request.number }}
 
       - name: Add build info
         run: |

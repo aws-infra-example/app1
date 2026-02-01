@@ -24,6 +24,8 @@
     .info { background: #fff; padding: 1rem; border-radius: 4px; margin-top: 1rem; }
     .info dt { font-weight: bold; margin-top: 0.5rem; }
     .info dd { color: #666; }
+    h2 { margin-top: 2rem; margin-bottom: 0.5rem; color: #333; }
+    .sandbox-banner { background: #fff3cd; color: #856404; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1rem; border: 1px solid #ffc107; }
   </style>
 </head>
 <body>
@@ -47,7 +49,16 @@
       <dd id="sha">__APP_SHA__</dd>
       <dt>Build Time</dt>
       <dd id="time">__BUILD_TIME__</dd>
+      <dt>Build Env</dt>
+      <dd id="build-env">__APP_ENV__</dd>
+      <dt>Config</dt>
+      <dd id="config"><pre style="margin:0;font-size:0.85em;"></pre></dd>
     </dl>
+
+    <h2>Ecosystem</h2>
+    <section id="ecosystem-section">
+      <p><em>Loading ecosystem manifest...</em></p>
+    </section>
   </main>
   <script>
     // Load main.js using computed base path
