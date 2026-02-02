@@ -91,11 +91,11 @@ jobs:
               issue_number: prNum,
               body: `## Sandbox Deploying
 
-**URL:** ${sandboxUrl}
+            **URL:** ${sandboxUrl}
 
-**Customize versions:** [Edit sandbox manifest](${infraPrUrl})
+            **Customize versions:** [Edit sandbox manifest](${infraPrUrl})
 
-To test with specific versions of other apps, edit the manifest in the infra-ecosystem PR.`
+            To test with specific versions of other apps, edit the manifest in the infra-ecosystem PR.`
             });
 
   e2e-tests:
