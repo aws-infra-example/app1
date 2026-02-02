@@ -82,7 +82,7 @@ jobs:
         with:
           script: |
             const prNum = context.payload.pull_request.number;
-            const sandboxUrl = `https://d3qmcix5z43lko.cloudfront.net/sandbox-pr-${prNum}/`;
+            const sandboxUrl = `https://d3qmcix5z43lko.cloudfront.net/sandbox-pr-${prNum}/app1/`;
             const infraPrUrl = `https://github.com/aws-infra-example/infra-ecosystem/pulls?q=is%3Apr+sandbox%2Fpr-${prNum}`;
 
             github.rest.issues.createComment({
