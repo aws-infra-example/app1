@@ -11,7 +11,7 @@
     "test:e2e:headed": "npx playwright test --headed"
   },
   "devDependencies": {
-    "@aws-infra-example/e2e-lib": "file:../e2e-testing",
+    "@aws-infra-example/e2e-lib": "^0.0.0",
     "@playwright/test": "^1.58.1"
   }
 }
